@@ -7,21 +7,29 @@ import { useRouter } from "next/navigation"; // Change this import
 const Home = () => {
   const [rollno, setRollno] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const router = useRouter(); // This should now refer to next/navigation's useRouter
-  const [error, setError] = React.useState(null);
+  const router = useRouter(); 
+  const [error, setError] = React.useState("");
   const Submitbro = async (e: any) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
-        "http://192.168.137.63:8080/studentlogin/",
-        {
-          rollno: rollno,
-          password: password,
-        }
-      );
-      console.log(response);
+      const response = await axios.post("http://192.168.93.72:8000/login/", {
+        username: rollno,
+        password: password,
+      });
+      console.log(response.data);
 
-      router.push("/");
+      if (response.data["token"] && response.data["user_type"] === "Student") {
+        localStorage.setItem("token", response.data["token"]);
+        router.push("/studentdashboard");
+      } else if (
+        response.data["token"] &&
+        response.data["user_type"] === "HOD"
+      ) {
+        localStorage.setItem("token", response.data["token"]);
+        router.push("/admindashboard");
+      } else {
+        setError("Invalid Credentials");
+      }
     } catch (error) {
       console.error("Error during login:", error);
     }
@@ -44,7 +52,7 @@ const Home = () => {
                   htmlFor="email"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  Email address
+                  Username
                 </label>
                 <div className="mt-1">
                   <input
