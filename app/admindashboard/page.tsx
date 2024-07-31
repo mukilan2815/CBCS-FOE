@@ -8,14 +8,17 @@ const Page = () => {
   const [subjectName, setSubjectName] = useState("");
   const [subjectCode, setSubjectCode] = useState("");
   const [isOptional, setIsOptional] = useState(false);
+  const [students, setStudents] = useState([]);
+  const [courses, setCourses] = useState([]);
   const token = localStorage.getItem("token");
+
   const handleSubmit = async () => {
     var code = subjectCode;
     var name = subjectName;
     var is_optional = isOptional;
     try {
       const response = await axios.post(
-        "http://192.168.93.72:8000/update_course/",
+        "http://192.168.188.144:8000/update_course/",
         {
           semester,
           name,
@@ -24,7 +27,7 @@ const Page = () => {
         },
         {
           headers: {
-            Authorization: `Token ${token}`,
+            Authorization: `token ${token}`,
           },
         }
       );
@@ -37,9 +40,44 @@ const Page = () => {
     }
   };
 
+  const handleFetch = async () => {
+    try {
+      const response = await axios.get(
+        "http://192.168.188.144:8000/students/",
+        {
+          headers: {
+            Authorization: `token ${token}`,
+          },
+        }
+      );
+      setStudents(response.data);
+      console.log(response.data);
+    } catch (error) {
+      console.error("There was an error fetching the students!", error);
+    }
+  };
+
+  const handleCourses = async () => {
+    try {
+      const response = await axios.get("http://192.168.188.144:8000/courses/", {
+        headers: {
+          Authorization: `token ${token}`,
+        },
+      });
+      setCourses(response.data);
+      console.log(response.data);
+    } catch (error) {
+      console.error("There was an error fetching the courses!", error);
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
-    <div className="flex h-screen bg-gray-100">
-      <div className="hidden md:flex flex-co w-64 bg-gray-800">
+    <div className="flex h-screen text-black bg-gray-100">
+      <div className="hidden md:flex flex-col w-64 bg-gray-800">
         <div className="flex items-center justify-center h-16 bg-gray-900">
           <span className="text-white font-bold uppercase">Kahe Dashboard</span>
         </div>
@@ -85,6 +123,26 @@ const Page = () => {
               </svg>
               View Students
             </a>
+            <a
+              href="#"
+              onClick={() => setView("courses")}
+              className="flex items-center px-4 py-2 mt-2 text-gray-100 hover:bg-gray-700"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 mr-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5m.75-9 3-3 2.148 2.148A12.061 12.061 0 0 1 16.5 7.605"
+                />
+              </svg>
+              View Courses
+            </a>
           </nav>
         </div>
       </div>
@@ -111,15 +169,14 @@ const Page = () => {
                     onChange={(e) => setSemester(e.target.value)}
                     className="block appearance-none w-full bg-gray-200 border border-gray-300 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   >
-                    <option value="">Select Semester</option>
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                    <option value="6">6</option>
-                    <option value="7">7</option>
-                    <option value="8">8</option>
+                    <option value="1">First Semester</option>
+                    <option value="2">Second Semester</option>
+                    <option value="3">Third Semester</option>
+                    <option value="4">Fourth Semester</option>
+                    <option value="5">Fifth Semester</option>
+                    <option value="6">Sixth Semester</option>
+                    <option value="7">Seventh Semester</option>
+                    <option value="8">Eighth Semester</option>
                   </select>
                 </div>
                 <div className="mb-4">
@@ -127,11 +184,10 @@ const Page = () => {
                     Subject Name
                   </label>
                   <input
+                    type="text"
                     value={subjectName}
                     onChange={(e) => setSubjectName(e.target.value)}
-                    className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    type="text"
-                    placeholder="Enter subject name"
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                   />
                 </div>
                 <div className="mb-4">
@@ -139,39 +195,111 @@ const Page = () => {
                     Subject Code
                   </label>
                   <input
+                    type="text"
                     value={subjectCode}
                     onChange={(e) => setSubjectCode(e.target.value)}
-                    className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    type="text"
-                    placeholder="Enter subject code"
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                   />
                 </div>
-                <div className="mb-6">
+                <div className="mb-4">
                   <label className="block text-gray-700 text-sm font-bold mb-2">
-                    Optional
+                    Is Optional
                   </label>
                   <input
+                    type="checkbox"
                     checked={isOptional}
                     onChange={(e) => setIsOptional(e.target.checked)}
-                    className="mr-2 leading-tight"
-                    type="checkbox"
+                    className="form-checkbox h-5 w-5 text-gray-600"
                   />
-                  <span className="text-sm text-black">
-                    Is this subject optional?
-                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <button
-                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                     type="submit"
+                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                   >
-                    Submit
+                    Upload
                   </button>
                 </div>
               </form>
             </div>
           )}
-          {view === "students" && <div>View Students Content</div>}
+
+          {view === "students" && (
+            <div>
+              <button
+                onClick={handleFetch}
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-4"
+              >
+                Fetch Students
+              </button>
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-black bg-white">
+                  <thead>
+                    <tr>
+                      <th className="py-2 px-4 border-b">ID</th>
+                      <th className="py-2 px-4 border-b">Name</th>
+                      <th className="py-2 px-4 border-b">Email</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {students.map((student) => (
+                      <tr key={student.id}>
+                        <td className="py-2 px-4 border-b">{student.id}</td>
+                        <td className="py-2 px-4 border-b">
+                          {student.username}
+                        </td>
+                        <td className="py-2 px-4 border-b">{student.email}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {view === "courses" && (
+            <div>
+              <button
+                onClick={handleCourses}
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-4"
+              >
+                Fetch Courses
+              </button>
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-black bg-white">
+                  <thead>
+                    <tr>
+                      <th className="py-2 px-4 border-b">ID</th>
+                      <th className="py-2 px-4 border-b">Name</th>
+                      <th className="py-2 px-4 border-b">Code</th>
+                      <th className="py-2 px-4 border-b">Is Optional</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {courses.map((course) => (
+                      <tr key={course.id}>
+                        <td className="py-2 px-4 border-b">{course.id}</td>
+                        <td className="py-2 px-4 border-b">{course.name}</td>
+                        <td className="py-2 px-4 border-b">{course.code}</td>
+                        <td className="py-2 px-4 border-b">
+                          {course.semester}
+                        </td>
+                        <td className="py-2 px-4 border-b">
+                          {course.is_optional ? "Yes" : "No"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <button
+                onClick={handlePrint}
+                className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-4"
+              >
+                Print
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

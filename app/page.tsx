@@ -1,18 +1,17 @@
 "use client";
 import React from "react";
 import axios from "axios";
-import Link from "next/link";
-import { useRouter } from "next/navigation"; // Change this import
+import { useRouter } from "next/navigation";
 
 const Home = () => {
   const [rollno, setRollno] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const router = useRouter(); 
+  const router = useRouter();
   const [error, setError] = React.useState("");
   const Submitbro = async (e: any) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://192.168.93.72:8000/login/", {
+      const response = await axios.post("http://192.168.188.144:8000/login/", {
         username: rollno,
         password: password,
       });
@@ -56,9 +55,9 @@ const Home = () => {
                 </label>
                 <div className="mt-1">
                   <input
-                    id="email"
-                    name="email"
-                    type="email"
+                    id="name"
+                    name="name"
+                    type="name"
                     required
                     className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                     placeholder="Enter your email address"
