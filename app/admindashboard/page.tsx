@@ -2,14 +2,28 @@
 import axios from "axios";
 import React, { useState } from "react";
 
+interface Student {
+  id: number;
+  username: string;
+  email: string;
+}
+
+interface Course {
+  id: number;
+  name: string;
+  code: string;
+  semester: string;
+  is_optional: boolean;
+}
+
 const Page = () => {
   const [view, setView] = useState("none");
   const [semester, setSemester] = useState("");
   const [subjectName, setSubjectName] = useState("");
   const [subjectCode, setSubjectCode] = useState("");
   const [isOptional, setIsOptional] = useState(false);
-  const [students, setStudents] = useState([]);
-  const [courses, setCourses] = useState([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const token = localStorage.getItem("token");
 
   const handleSubmit = async () => {
@@ -164,20 +178,12 @@ const Page = () => {
                   <label className="block text-gray-700 text-sm font-bold mb-2">
                     Semester
                   </label>
-                  <select
+                  <input
+                    type="text"
                     value={semester}
                     onChange={(e) => setSemester(e.target.value)}
-                    className="block appearance-none w-full bg-gray-200 border border-gray-300 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  >
-                    <option value="1">First Semester</option>
-                    <option value="2">Second Semester</option>
-                    <option value="3">Third Semester</option>
-                    <option value="4">Fourth Semester</option>
-                    <option value="5">Fifth Semester</option>
-                    <option value="6">Sixth Semester</option>
-                    <option value="7">Seventh Semester</option>
-                    <option value="8">Eighth Semester</option>
-                  </select>
+                    className="w-full px-3 py-2 border rounded"
+                  />
                 </div>
                 <div className="mb-4">
                   <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -187,7 +193,7 @@ const Page = () => {
                     type="text"
                     value={subjectName}
                     onChange={(e) => setSubjectName(e.target.value)}
-                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    className="w-full px-3 py-2 border rounded"
                   />
                 </div>
                 <div className="mb-4">
@@ -198,108 +204,106 @@ const Page = () => {
                     type="text"
                     value={subjectCode}
                     onChange={(e) => setSubjectCode(e.target.value)}
-                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    className="w-full px-3 py-2 border rounded"
                   />
                 </div>
-                <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-bold mb-2">
+                <div className="mb-4 flex items-center">
+                  <label className="block text-gray-700 text-sm font-bold mb-2 mr-4">
                     Is Optional
                   </label>
                   <input
                     type="checkbox"
                     checked={isOptional}
                     onChange={(e) => setIsOptional(e.target.checked)}
-                    className="form-checkbox h-5 w-5 text-gray-600"
+                    className="form-checkbox h-5 w-5"
                   />
                 </div>
-                <div className="flex items-center justify-between">
-                  <button
-                    type="submit"
-                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                  >
-                    Upload
-                  </button>
-                </div>
+                <button
+                  type="submit"
+                  className="w-full bg-blue-500 text-white py-2 px-4 rounded"
+                >
+                  Submit
+                </button>
               </form>
             </div>
           )}
 
           {view === "students" && (
-            <div>
+            <div className="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-2xl font-bold mb-6 text-gray-800">
+                Students List
+              </h2>
               <button
                 onClick={handleFetch}
-                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-4"
+                className="w-full bg-blue-500 text-white py-2 px-4 rounded mb-6"
               >
                 Fetch Students
               </button>
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-black bg-white">
-                  <thead>
-                    <tr>
-                      <th className="py-2 px-4 border-b">ID</th>
-                      <th className="py-2 px-4 border-b">Name</th>
-                      <th className="py-2 px-4 border-b">Email</th>
+              <table className="min-w-full bg-white">
+                <thead>
+                  <tr>
+                    <th className="py-2 px-4 border-b">ID</th>
+                    <th className="py-2 px-4 border-b">Username</th>
+                    <th className="py-2 px-4 border-b">Email</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {students.map((student) => (
+                    <tr key={student.id}>
+                      <td className="py-2 px-4 border-b">{student.id}</td>
+                      <td className="py-2 px-4 border-b">{student.username}</td>
+                      <td className="py-2 px-4 border-b">{student.email}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {students.map((student) => (
-                      <tr key={student.id}>
-                        <td className="py-2 px-4 border-b">{student.id}</td>
-                        <td className="py-2 px-4 border-b">
-                          {student.username}
-                        </td>
-                        <td className="py-2 px-4 border-b">{student.email}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
 
           {view === "courses" && (
-            <div>
+            <div className="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-2xl font-bold mb-6 text-gray-800">
+                Courses List
+              </h2>
               <button
                 onClick={handleCourses}
-                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-4"
+                className="w-full bg-blue-500 text-white py-2 px-4 rounded mb-6"
               >
-                Fetch Courses
+                View Courses
               </button>
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-black bg-white">
-                  <thead>
-                    <tr>
-                      <th className="py-2 px-4 border-b">ID</th>
-                      <th className="py-2 px-4 border-b">Name</th>
-                      <th className="py-2 px-4 border-b">Code</th>
-                      <th className="py-2 px-4 border-b">Is Optional</th>
+              <table className="min-w-full bg-white">
+                <thead>
+                  <tr>
+                    <th className="py-2 px-4 border-b">ID</th>
+                    <th className="py-2 px-4 border-b">Name</th>
+                    <th className="py-2 px-4 border-b">Code</th>
+                    <th className="py-2 px-4 border-b">Semester</th>
+                    <th className="py-2 px-4 border-b">Optional</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {courses.map((course) => (
+                    <tr key={course.id}>
+                      <td className="py-2 px-4 border-b">{course.id}</td>
+                      <td className="py-2 px-4 border-b">{course.name}</td>
+                      <td className="py-2 px-4 border-b">{course.code}</td>
+                      <td className="py-2 px-4 border-b">{course.semester}</td>
+                      <td className="py-2 px-4 border-b">
+                        {course.is_optional ? "Yes" : "No"}
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {courses.map((course) => (
-                      <tr key={course.id}>
-                        <td className="py-2 px-4 border-b">{course.id}</td>
-                        <td className="py-2 px-4 border-b">{course.name}</td>
-                        <td className="py-2 px-4 border-b">{course.code}</td>
-                        <td className="py-2 px-4 border-b">
-                          {course.semester}
-                        </td>
-                        <td className="py-2 px-4 border-b">
-                          {course.is_optional ? "Yes" : "No"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <button
-                onClick={handlePrint}
-                className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-4"
-              >
-                Print
-              </button>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
+
+          <button
+            onClick={handlePrint}
+            className="w-fit bg-green-500 text-white py-2 px-4 rounded mt-6"
+          >
+            Print
+          </button>
         </div>
       </div>
     </div>
