@@ -32,8 +32,7 @@ const Page: React.FC = () => {
   >([]);
   const [search, setSearch] = useState<string>("");
   const token = localStorage.getItem("token");
-  const [studentsname, setStudentsname] = useState<Course1[]>([]);
-
+  const [studentsname, setstudentsname] = useState<Course1[]>([]);
   useEffect(() => {
     handleCourses();
   }, [semester]);
@@ -41,9 +40,9 @@ const Page: React.FC = () => {
   const handleSubmit = async () => {
     try {
       console.log(selectedOptionalCourses);
-      const response = await axios.post(
-        "http://192.168.188.144:8000/courses/",
-        { courses: selectedOptionalCourses }, // Pass the data correctly
+      const response1 = await axios.post(
+        "http://192.168.188.144:8001/courses/",
+        [courses], // Pass the data as the second argument
         {
           headers: {
             Authorization: `token ${token}`,
@@ -52,16 +51,16 @@ const Page: React.FC = () => {
         }
       );
       console.error("Token:", token);
-      alert("Course is submitted");
+      alert("Course is submitted", courses);
     } catch (error) {
-      console.error("There was an error submitting the courses!", error);
+      console.error("There was an error fetching the courses!", error);
     }
   };
 
   const handleCourses = async () => {
     try {
       const response = await axios.get<Course[]>(
-        "http://192.168.188.144:8000/courses/",
+        "http://192.168.188.144:8001/courses/",
         {
           headers: {
             Authorization: `token ${token}`,
@@ -82,7 +81,7 @@ const Page: React.FC = () => {
 
   useEffect(() => {
     handleCourses();
-    fetchStudents();
+    fetchstudents();
   }, []);
 
   const handleSelectCourse = (course: Course) => {
@@ -95,11 +94,10 @@ const Page: React.FC = () => {
   const filteredCoursesByName = filteredCourses.filter((course) =>
     course.name.toLowerCase().includes(search.toLowerCase())
   );
-
-  const fetchStudents = async () => {
+  const fetchstudents = async () => {
     try {
-      const response = await axios.get<Course1[]>(
-        "http://192.168.188.144:8000/students/",
+      const response = await axios.get(
+        "http://192.168.188.144:8001/students/",
         {
           headers: {
             Authorization: `token ${token}`,
@@ -107,7 +105,7 @@ const Page: React.FC = () => {
         }
       );
       // Ensure we always set an array to the state
-      setStudentsname(
+      setstudentsname(
         Array.isArray(response.data) ? response.data : [response.data]
       );
       console.log(response.data);
@@ -115,7 +113,6 @@ const Page: React.FC = () => {
       console.error("There was an error fetching the students!", error);
     }
   };
-
   return (
     <div className="flex h-screen text-black overflow-y-hidden bg-gray-100">
       <div className="hidden md:flex flex-col w-64 bg-gray-800">
@@ -153,7 +150,7 @@ const Page: React.FC = () => {
                         {student.email}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {student.department}
+                        {student.department.name}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {student.sem}
@@ -185,7 +182,7 @@ const Page: React.FC = () => {
               className="shadow-sm border rounded-lg w-full py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <div className="mt-4 bg-white shadow-md rounded-lg max-h-60 overflow-auto">
+          <div className="mt-4 bg-white shadow-md rounded-lg max-h-60 ">
             <h3 className="text-lg font-semibold p-4">Optional Courses</h3>
             <div className="divide-y divide-gray-200">
               {filteredCoursesByName.map((course) => (
@@ -247,16 +244,58 @@ const Page: React.FC = () => {
                   </tbody>
                 </table>
               </div>
+              <div className="mt-8">
+                <h3 className="text-xl font-bold mb-4">
+                  Enrolled Optional Courses
+                </h3>
+
+                <div className="overflow-x-auto mt-4 bg-white shadow-md rounded-lg">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          ID
+                        </th>
+                        <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Subject Name
+                        </th>
+                        <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Subject Code
+                        </th>
+                        <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Semester No.
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {selectedOptionalCourses.map((course) => (
+                        <tr key={course.id}>
+                          <td className="py-3 px-4 text-sm font-medium text-gray-900">
+                            {course.id}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-500">
+                            {course.name}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-500">
+                            {course.code}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-500">
+                            {course.semester}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <button
+                  onClick={handleSubmit}
+                  className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 mt-4"
+                >
+                  Submit
+                </button>
+              </div>
             </div>
           )}
-        </div>
-        <div className="p-6">
-          <button
-            onClick={handleSubmit}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          >
-            Submit
-          </button>
         </div>
       </div>
     </div>

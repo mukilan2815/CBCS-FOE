@@ -11,7 +11,7 @@ const Home = () => {
   const Submitbro = async (e: any) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://192.168.188.144:8000/login/", {
+      const response = await axios.post("http://192.168.188.144:8001/login/", {
         username: rollno,
         password: password,
       });

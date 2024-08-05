@@ -6,6 +6,9 @@ interface Student {
   id: number;
   username: string;
   email: string;
+  // Add other student details fields here if available
+  phone?: string;
+  address?: string;
 }
 
 interface Course {
@@ -24,6 +27,7 @@ const Page = () => {
   const [isOptional, setIsOptional] = useState(false);
   const [students, setStudents] = useState<Student[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const token = localStorage.getItem("token");
 
   const handleSubmit = async () => {
@@ -32,7 +36,7 @@ const Page = () => {
     var is_optional = isOptional;
     try {
       const response = await axios.post(
-        "http://192.168.188.144:8000/update_course/",
+        "http://192.168.188.144:8001/update_course/",
         {
           semester,
           name,
@@ -57,7 +61,7 @@ const Page = () => {
   const handleFetch = async () => {
     try {
       const response = await axios.get(
-        "http://192.168.188.144:8000/students/",
+        "http://192.168.188.144:8001/students/",
         {
           headers: {
             Authorization: `token ${token}`,
@@ -73,7 +77,7 @@ const Page = () => {
 
   const handleCourses = async () => {
     try {
-      const response = await axios.get("http://192.168.188.144:8000/courses/", {
+      const response = await axios.get("http://192.168.188.144:8001/courses/", {
         headers: {
           Authorization: `token ${token}`,
         },
@@ -87,6 +91,14 @@ const Page = () => {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleStudentClick = (student: Student) => {
+    setSelectedStudent(student);
+  };
+
+  const handleBackToList = () => {
+    setSelectedStudent(null);
   };
 
   return (
@@ -164,63 +176,75 @@ const Page = () => {
       <div className="flex flex-col flex-1 rightside overflow-y-auto">
         <div className="p-4">
           {view === "upload" && (
-            <div className="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-2xl font-bold mb-6 text-gray-800">
-                Upload Content
-              </h2>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleSubmit();
-                }}
-              >
+            <div className="max-w-lg mx-auto bg-white p-8 rounded-lg shadow-md">
+              <h2 className="text-2xl font-bold mb-6">Upload Course</h2>
+              <form>
                 <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-bold mb-2">
-                    Semester
+                  <label
+                    htmlFor="semester"
+                    className="block text-gray-700 font-bold mb-2"
+                  >
+                    Semester:
                   </label>
                   <input
                     type="text"
+                    id="semester"
                     value={semester}
                     onChange={(e) => setSemester(e.target.value)}
-                    className="w-full px-3 py-2 border rounded"
+                    className="w-full px-3 py-2 border border-gray-300 rounded"
                   />
                 </div>
                 <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-bold mb-2">
-                    Subject Name
+                  <label
+                    htmlFor="subjectName"
+                    className="block text-gray-700 font-bold mb-2"
+                  >
+                    Subject Name:
                   </label>
                   <input
                     type="text"
+                    id="subjectName"
                     value={subjectName}
                     onChange={(e) => setSubjectName(e.target.value)}
-                    className="w-full px-3 py-2 border rounded"
+                    className="w-full px-3 py-2 border border-gray-300 rounded"
                   />
                 </div>
                 <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-bold mb-2">
-                    Subject Code
+                  <label
+                    htmlFor="subjectCode"
+                    className="block text-gray-700 font-bold mb-2"
+                  >
+                    Subject Code:
                   </label>
                   <input
                     type="text"
+                    id="subjectCode"
                     value={subjectCode}
                     onChange={(e) => setSubjectCode(e.target.value)}
-                    className="w-full px-3 py-2 border rounded"
+                    className="w-full px-3 py-2 border border-gray-300 rounded"
                   />
                 </div>
-                <div className="mb-4 flex items-center">
-                  <label className="block text-gray-700 text-sm font-bold mb-2 mr-4">
-                    Is Optional
+                <div className="mb-4">
+                  <label className="block text-gray-700 font-bold mb-2">
+                    Optional:
                   </label>
-                  <input
-                    type="checkbox"
-                    checked={isOptional}
-                    onChange={(e) => setIsOptional(e.target.checked)}
-                    className="form-checkbox h-5 w-5"
-                  />
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="isOptional"
+                      checked={isOptional}
+                      onChange={(e) => setIsOptional(e.target.checked)}
+                      className="mr-2"
+                    />
+                    <label htmlFor="isOptional" className="text-gray-700">
+                      Is Optional
+                    </label>
+                  </div>
                 </div>
                 <button
-                  type="submit"
-                  className="w-full bg-blue-500 text-white py-2 px-4 rounded"
+                  type="button"
+                  onClick={handleSubmit}
+                  className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700"
                 >
                   Submit
                 </button>
@@ -229,66 +253,135 @@ const Page = () => {
           )}
 
           {view === "students" && (
-            <div className="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-2xl font-bold mb-6 text-gray-800">
-                Students List
-              </h2>
+            <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md">
+              <h2 className="text-2xl font-bold mb-6">Student List</h2>
               <button
                 onClick={handleFetch}
-                className="w-full bg-blue-500 text-white py-2 px-4 rounded mb-6"
+                className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700 mb-6"
               >
                 Fetch Students
               </button>
-              <table className="min-w-full bg-white">
-                <thead>
-                  <tr>
-                    <th className="py-2 px-4 border-b">ID</th>
-                    <th className="py-2 px-4 border-b">Username</th>
-                    <th className="py-2 px-4 border-b">Email</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {students.map((student) => (
-                    <tr key={student.id}>
-                      <td className="py-2 px-4 border-b">{student.id}</td>
-                      <td className="py-2 px-4 border-b">{student.username}</td>
-                      <td className="py-2 px-4 border-b">{student.email}</td>
+              {selectedStudent ? (
+                <div>
+                  <h3 className="text-xl font-bold mb-4">Student Details</h3>
+                  <p>ID: {selectedStudent.id}</p>
+                  <p>Username: {selectedStudent.username}</p>
+                  <p>Email: {selectedStudent.email}</p>
+                  <p>Department: {selectedStudent.department.name}</p>
+                  {selectedStudent.phone && (
+                    <p>Phone: {selectedStudent.phone}</p>
+                  )}
+                  {selectedStudent.address && (
+                    <p>Address: {selectedStudent.address}</p>
+                  )}
+                  <h4 className="text-lg font-bold mt-4">Enrolled Courses:</h4>
+                  <ul>
+                    {selectedStudent.enrolled_courses.map((course) => (
+                      <li key={course.id}>
+                        {course.name} (Code: {course.code}, Semester:{" "}
+                        {course.semester}, Optional:{" "}
+                        {course.is_optional ? "Yes" : "No"})
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    onClick={handleBackToList}
+                    className="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-700 mt-4"
+                  >
+                    Back to List
+                  </button>
+                </div>
+              ) : (
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead>
+                    <tr>
+                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        ID
+                      </th>
+                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Username
+                      </th>
+                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Email
+                      </th>
+                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {students.map((student) => (
+                      <tr key={student.id}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {student.id}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {student.username}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {student.email}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <button
+                            onClick={() => handleStudentClick(student)}
+                            className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700"
+                          >
+                            View Details
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           )}
 
           {view === "courses" && (
-            <div className="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-2xl font-bold mb-6 text-gray-800">
-                Courses List
-              </h2>
+            <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md">
+              <h2 className="text-2xl font-bold mb-6">Courses</h2>
               <button
                 onClick={handleCourses}
-                className="w-full bg-blue-500 text-white py-2 px-4 rounded mb-6"
+                className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700 mb-6"
               >
-                View Courses
+                Fetch Courses
               </button>
-              <table className="min-w-full bg-white">
+              <table className="min-w-full divide-y divide-gray-200">
                 <thead>
                   <tr>
-                    <th className="py-2 px-4 border-b">ID</th>
-                    <th className="py-2 px-4 border-b">Name</th>
-                    <th className="py-2 px-4 border-b">Code</th>
-                    <th className="py-2 px-4 border-b">Semester</th>
-                    <th className="py-2 px-4 border-b">Optional</th>
+                    <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      ID
+                    </th>
+                    <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Code
+                    </th>
+                    <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Semester
+                    </th>
+                    <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Optional
+                    </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="bg-white divide-y divide-gray-200">
                   {courses.map((course) => (
                     <tr key={course.id}>
-                      <td className="py-2 px-4 border-b">{course.id}</td>
-                      <td className="py-2 px-4 border-b">{course.name}</td>
-                      <td className="py-2 px-4 border-b">{course.code}</td>
-                      <td className="py-2 px-4 border-b">{course.semester}</td>
-                      <td className="py-2 px-4 border-b">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {course.id}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {course.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {course.code}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {course.semester}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {course.is_optional ? "Yes" : "No"}
                       </td>
                     </tr>
@@ -297,13 +390,6 @@ const Page = () => {
               </table>
             </div>
           )}
-
-          <button
-            onClick={handlePrint}
-            className="w-fit bg-green-500 text-white py-2 px-4 rounded mt-6"
-          >
-            Print
-          </button>
         </div>
       </div>
     </div>
