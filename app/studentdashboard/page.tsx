@@ -25,6 +25,7 @@ const Page: React.FC = () => {
   const [view, setView] = useState<"courses">("courses");
   const [semester, setSemester] = useState<string>("1");
   const [courses, setCourses] = useState<Course[]>([]);
+  const [notEnrolledCourses, setNotEnrolledCourses] = useState<Course[]>([]);
   const [optionalCourses, setOptionalCourses] = useState<Course[]>([]);
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
   const [selectedOptionalCourses, setSelectedOptionalCourses] = useState<
@@ -33,16 +34,49 @@ const Page: React.FC = () => {
   const [search, setSearch] = useState<string>("");
   const token = localStorage.getItem("token");
   const [studentsname, setstudentsname] = useState<Course1[]>([]);
+  const handleCourses = React.useCallback(async () => {
+    try {
+      const response = await axios.get<{ AllCourses: Course[] }>(
+        "http://192.168.250.219:8000/selectcourse/",
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        }
+      );
+      const coursesData: Course[] = response.data.AllCourses;
+      setCourses(coursesData);
+      // setNotEnrolledCourses(response.data['NotEnrolledCourses'])
+      const optionalCoursesData = coursesData.filter(
+        (course: Course) => course.is_optional
+      );
+      setOptionalCourses(optionalCoursesData);
+      setFilteredCourses(optionalCoursesData);
+    } catch (error) {
+      console.error("There was an error fetching the courses!", error);
+    }
+  }, [token]);
+
   useEffect(() => {
     handleCourses();
-  }, [semester]);
+  }, [semester, handleCourses]);
 
   const handleSubmit = async () => {
     try {
-      console.log(selectedOptionalCourses);
+      // Filter the compulsory courses
+      const compulsoryCourses = courses.filter(
+        (course: Course) => !course.is_optional
+      );
+
+      // Combine compulsory and optional course IDs into one array
+      const selectedCourses = [
+        ...compulsoryCourses.map((course: Course) => course.id),
+        ...selectedOptionalCourses.map((course: Course) => course.id),
+      ];
+
       const response1 = await axios.post(
-        "http://192.168.188.144:8001/courses/",
-        [courses], // Pass the data as the second argument
+        "http://192.168.250.219:8000/selectcourse/",
+        { courses: selectedCourses }, // Send the array under 'courses' key
         {
           headers: {
             Authorization: `token ${token}`,
@@ -50,39 +84,38 @@ const Page: React.FC = () => {
           },
         }
       );
-      console.error("Token:", token);
-      alert("Course is submitted", courses);
-    } catch (error) {
-      console.error("There was an error fetching the courses!", error);
-    }
-  };
 
-  const handleCourses = async () => {
-    try {
-      const response = await axios.get<Course[]>(
-        "http://192.168.188.144:8001/courses/",
-        {
-          headers: {
-            Authorization: `token ${token}`,
-          },
-        }
-      );
-      const coursesData = response.data;
-      setCourses(coursesData);
-      const optionalCoursesData = coursesData.filter(
-        (course) => course.is_optional
-      );
-      setOptionalCourses(optionalCoursesData);
-      setFilteredCourses(optionalCoursesData);
+      console.log("Submitted Courses: ", selectedCourses);
+      alert("Courses submitted successfully!");
     } catch (error) {
-      console.error("There was an error fetching the courses!", error);
+      console.error("There was an error submitting the courses!", error);
     }
   };
 
   useEffect(() => {
+    const fetchstudents = async () => {
+      try {
+        const response = await axios.get(
+          "http://192.168.250.219:8000/students/",
+          {
+            headers: {
+              Authorization: `token ${token}`,
+            },
+          }
+        );
+        // Ensure we always set an array to the state
+        setstudentsname(
+          Array.isArray(response.data) ? response.data : [response.data]
+        );
+        console.log(response.data);
+      } catch (error) {
+        console.error("There was an error fetching the students!", error);
+      }
+    };
+
     handleCourses();
     fetchstudents();
-  }, []);
+  }, [handleCourses, token]);
 
   const handleSelectCourse = (course: Course) => {
     setSelectedOptionalCourses((prevCourses) => [...prevCourses, course]);
@@ -91,28 +124,9 @@ const Page: React.FC = () => {
     );
   };
 
-  const filteredCoursesByName = filteredCourses.filter((course) =>
+  const filteredCoursesByName = filteredCourses.filter((course: Course) =>
     course.name.toLowerCase().includes(search.toLowerCase())
   );
-  const fetchstudents = async () => {
-    try {
-      const response = await axios.get(
-        "http://192.168.188.144:8001/students/",
-        {
-          headers: {
-            Authorization: `token ${token}`,
-          },
-        }
-      );
-      // Ensure we always set an array to the state
-      setstudentsname(
-        Array.isArray(response.data) ? response.data : [response.data]
-      );
-      console.log(response.data);
-    } catch (error) {
-      console.error("There was an error fetching the students!", error);
-    }
-  };
   return (
     <div className="flex h-screen text-black overflow-y-hidden bg-gray-100">
       <div className="hidden md:flex flex-col w-64 bg-gray-800">
@@ -123,42 +137,21 @@ const Page: React.FC = () => {
           <div className="mt-4 bg-white shadow-md rounded-lg p-4">
             <h2 className="text-xl font-bold mb-4">Student Information</h2>
             {Array.isArray(studentsname) && studentsname.length > 0 ? (
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Email
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Department
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Semester
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {studentsname.map((student: Course1) => (
-                    <tr key={student.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
+              <div className="space-y-4">
+                {studentsname.map((student: Course1) => (
+                  <div
+                    key={student.id}
+                    className="bg-white shadow-md rounded-lg p-4 flex items-center"
+                  >
+                    <div className="ml-4">
+                      <h3 className="text-lg font-semibold">
                         {student.username}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {student.email}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {student.department.name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {student.sem}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </h3>
+                      <p className="text-gray-600">{student.email}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : (
               <p>No student data available</p>
             )}
